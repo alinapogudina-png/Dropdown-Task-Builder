@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dropdown Task Builder - ELT Workshop</title>
+    <title>Dropdown & Fill-in Task Builder - ELT Workshop</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
         
@@ -42,7 +42,7 @@
 </head>
 <body>
     <div class="editor-panel">
-        <h1>Dropdown Task Builder</h1>
+        <h1>Dropdown & Fill Builder</h1>
         <div class="subtitle">Alina Pogudina 2026 @ELT_workshop</div>
         
         <div class="form-group">
@@ -104,7 +104,7 @@
         <div class="flex-row" style="align-items: center;">
             <div class="form-group flex-col"><label>Цвет текста</label><input type="color" id="qColor" value="#000000" onchange="debounceGenerate()"></div>
             <div class="form-group flex-col"><label>Цвет текста в списке</label><input type="color" id="aColor" value="#000000" onchange="debounceGenerate()"></div>
-            <div class="form-group flex-col"><label>Фон списка</label><input type="color" id="boxColor" value="#ffffff" onchange="debounceGenerate()"></div>
+            <div class="form-group flex-col"><label>Фон списка / поля</label><input type="color" id="boxColor" value="#ffffff" onchange="debounceGenerate()"></div>
             <div class="form-group flex-col"><label>Неон (рамка)</label><input type="color" id="neonColor" value="#6C7BA0" onchange="debounceGenerate()"></div>
         </div>
         <div class="flex-row">
@@ -121,7 +121,7 @@
         <h3>Задание</h3>
         <div class="form-group">
             <label>Заголовок (необязательно)</label>
-            <input type="text" id="taskTitle" value="Choose the correct option." oninput="debounceGenerate()">
+            <input type="text" id="taskTitle" value="Choose the correct option or write the answer." oninput="debounceGenerate()">
         </div>
         <div class="flex-row">
             <div class="form-group flex-col" style="flex: 2;">
@@ -133,10 +133,10 @@ They * playing football right now.</textarea>
             </div>
             <div class="form-group flex-col" style="flex: 1;">
                 <label>Варианты ответов</label>
-                <textarea id="answerLines" rows="6" oninput="debounceGenerate()">wake|wakes|woke
+                <textarea id="answerLines" rows="6" oninput="debounceGenerate()">wake
 goes|go|going
 are|is|am</textarea>
-                <div class="hint">Для каждой * — новая строка.<br>Варианты через `|`. Первый — верный.</div>
+                <div class="hint">Для каждой * — новая строка.<br>Варианты через `|`. Первый — верный.<br><strong>Если указать ОДНО слово (без '|'), создастся поле ввода!</strong></div>
             </div>
         </div>
 
@@ -165,15 +165,25 @@ are|is|am</textarea>
                     let options = answerLines[selectCounter].split('|').map(s => s.trim()).filter(Boolean);
                     if (options.length > 0) {
                         let correctAnswer = options[0];
-                        let shuffledOptions = [...options].sort(() => Math.random() - 0.5);
                         
-                        let selectHTML = `<div class="dropdown-wrapper"><select class="dropdown-gap" data-correct="${correctAnswer}">`;
-                        selectHTML += `<option value="" selected disabled>---</option>`;
-                        shuffledOptions.forEach(opt => {
-                            selectHTML += `<option value="${opt}">${opt}</option>`;
-                        });
-                        selectHTML += `</select></div>`;
-                        htmlString += selectHTML;
+                        // Если в строке только ОДИН вариант — строим текстовое поле (Впиши слово)
+                        if (options.length === 1) {
+                            let inputHTML = `<div class="dropdown-wrapper">` +
+                                `<input type="text" class="task-gap input-gap" data-correct="${correctAnswer}" placeholder="..." autocomplete="off" spellcheck="false">` +
+                                `</div>`;
+                            htmlString += inputHTML;
+                        } 
+                        // Если вариантов несколько — строим выпадающий список (Dropdown)
+                        else {
+                            let shuffledOptions = [...options].sort(() => Math.random() - 0.5);
+                            let selectHTML = `<div class="dropdown-wrapper"><select class="task-gap dropdown-gap" data-correct="${correctAnswer}">`;
+                            selectHTML += `<option value="" selected disabled>---</option>`;
+                            shuffledOptions.forEach(opt => {
+                                selectHTML += `<option value="${opt}">${opt}</option>`;
+                            });
+                            selectHTML += `</select></div>`;
+                            htmlString += selectHTML;
+                        }
                         selectCounter++;
                     }
                 }
@@ -242,17 +252,28 @@ are|is|am</textarea>
         margin: 0 5px;
     }
     
+    /* Общие стили для пропусков (селекты и инпуты) */
+    .task-gap {
+        background: ${conf.boxColor} !important;
+        color: ${conf.aColor} !important;
+        border: 2px solid ${conf.neonColor} !important; 
+        border-radius: 10px !important;
+        font-family: ${conf.aFont} !important; 
+        font-size: ${conf.aFontSize}px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 0 10px ${conf.neonColor} !important;
+        height: calc(${conf.aFontSize}px + 18px) !important;
+        vertical-align: middle;
+    }
+
+    /* Стили выпадающего списка */
     .dropdown-gap {
         -webkit-appearance: none; -moz-appearance: none; appearance: none;
-        background: ${conf.boxColor} url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22${conf.neonColor.replace('#', '%23')}%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') no-repeat right 10px center;
-        background-size: 10px;
-        color: ${conf.aColor} !important;
-        border: 2px solid ${conf.neonColor} !important; border-radius: 10px !important;
+        background: ${conf.boxColor} url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22${conf.neonColor.replace('#', '%23')}%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') no-repeat right 10px center !important;
+        background-size: 10px !important;
         padding: 5px 30px 5px 15px !important; 
-        font-family: ${conf.aFont} !important; font-size: ${conf.aFontSize}px !important;
-        cursor: pointer !important; transition: all 0.2s ease !important;
-        box-shadow: 0 0 10px ${conf.neonColor} !important;
-        width: 80px;
+        cursor: pointer !important;
+        width: 120px;
     }
     .dropdown-gap:focus {
         outline: none; 
@@ -261,10 +282,22 @@ are|is|am</textarea>
         min-width: 150px;
     }
 
+    /* Стили текстового инпута (Впиши слово) */
+    .input-gap {
+        padding: 5px 15px !important;
+        text-align: center;
+        width: 120px;
+    }
+    .input-gap:focus {
+        outline: none;
+        box-shadow: 0 0 20px ${conf.neonColor} !important;
+        background: #ffffff !important;
+    }
+
     @keyframes errorShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
     
-    .dropdown-gap.correct-answer { border-color: ${conf.winFinalColor} !important; box-shadow: 0 0 15px ${conf.winFinalColor} !important; }
-    .dropdown-gap.wrong-answer { border-color: #ff4757 !important; box-shadow: 0 0 15px #ff4757 !important; animation: errorShake 0.4s ease !important; }
+    .task-gap.correct-answer { border-color: ${conf.winFinalColor} !important; box-shadow: 0 0 15px ${conf.winFinalColor} !important; }
+    .task-gap.wrong-answer { border-color: #ff4757 !important; box-shadow: 0 0 15px #ff4757 !important; animation: errorShake 0.4s ease !important; }
 
     .check-btn {
         background: ${conf.btnColor} !important; color: #fff !important; 
@@ -331,20 +364,27 @@ are|is|am</textarea>
     function checkAnswer() {
         let allCorrect = true;
         let allFilled = true;
-        const selects = document.querySelectorAll('.dropdown-gap');
+        const gaps = document.querySelectorAll('.task-gap');
         
-        selects.forEach(select => {
-            select.classList.remove('correct-answer', 'wrong-answer');
-            const isCorrect = select.value === select.dataset.correct;
+        gaps.forEach(gap => {
+            gap.classList.remove('correct-answer', 'wrong-answer');
+            const userVal = gap.value.trim();
+            const correctVal = gap.dataset.correct.trim();
             
-            if (select.value === "") {
+            if (userVal === "") {
                 allFilled = false;
             }
 
-            if (isCorrect) {
-                select.classList.add('correct-answer');
+            // Для текстовых полей (input) проверка регистронезависимая, для селектов — обычная
+            const isInput = gap.tagName.toLowerCase() === 'input';
+            const isCorrect = isInput 
+                ? userVal.toLowerCase() === correctVal.toLowerCase()
+                : userVal === correctVal;
+
+            if (isCorrect && userVal !== "") {
+                gap.classList.add('correct-answer');
             } else {
-                select.classList.add('wrong-answer');
+                gap.classList.add('wrong-answer');
                 allCorrect = false;
             }
         });
